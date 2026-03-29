@@ -209,9 +209,9 @@ Deckard puede funcionar de forma nativa dentro de **Claude Code**, usando la pro
 
 **Incluye tres mecanismos:**
 
-#### Subagente `@deckard` — Modo Agente Autónomo (Recomendado)
+#### Subagente `@deckard` — Revisor de Diffs (Recomendado para pre-commit)
 
-El subagente es un agente especializado con su **propia personalidad, contexto aislado y reglas preconfiguradas**. A diferencia de los otros mecanismos, el subagente ejecuta la revisión en un contexto limpio y enfocado exclusivamente en la tarea de revisión.
+El subagente es un agente especializado con su **propia personalidad, contexto aislado y reglas preconfiguradas**. Analiza únicamente los cambios staged/unstaged (`git diff`), ideal para revisiones antes de commit.
 
 **Invocación desde Claude Code:**
 ```
@@ -234,6 +234,42 @@ mkdir -p ~/.claude/agents
 cp <DECKARD_PATH>/.claude/agents/deckard.md ~/.claude/agents/deckard.md
 ```
 
+---
+
+#### Subagente `@officer-k` — Inspector de Código Completo
+
+**Officer K** (KD6-3.7) es la contraparte de Deckard. En lugar de analizar diffs, **inspecciona el código fuente completo del repositorio** (`git ls-files`). Ideal para auditorías periódicas o cuando incorporas un proyecto heredado y quieres conocer su estado real.
+
+**Invocación desde Claude Code:**
+```
+@officer-k inspecciona el repositorio
+```
+
+**Invocación desde la CLI:**
+```bash
+claude --agent officer-k "inspecciona todo el código del repositorio"
+```
+
+**Slash command equivalente:**
+```
+/inspect
+```
+
+**Instalación a nivel proyecto** (solo disponible en este repositorio):
+```bash
+# Ya incluido en .claude/agents/officer-k.md
+```
+
+**Instalación global** (disponible en TODOS tus proyectos):
+```bash
+mkdir -p ~/.claude/agents
+cp <DECKARD_PATH>/.claude/agents/officer-k.md ~/.claude/agents/officer-k.md
+```
+
+> **¿Cuándo usar cada uno?** Usa `@deckard` en tu flujo diario (pre-commit, PRs). Usa `@officer-k` cuando quieras una radiografía completa del repositorio: incorporación de proyectos legacy, auditorías de calidad, antes de una release importante.
+
+---
+
 #### Auto-Review (siempre activo)
 El archivo `CLAUDE.md` instruye a Claude Code para que **siempre** revise su propio código contra las reglas de Deckard antes de hacer commit. No requiere intervención del usuario.
 
@@ -253,13 +289,14 @@ cp <DECKARD_PATH>/.claude/commands/review.md /path/to/tu-proyecto/.claude/comman
 
 #### Comparativa de mecanismos
 
-| Aspecto | `@deckard` (Subagente) | `/review` (Command) | `CLAUDE.md` (Auto) |
-|---|---|---|---|
-| **Invocación** | `@deckard` o CLI `--agent` | `/review` en chat | Automático pre-commit |
-| **Contexto** | Aislado y enfocado | Comparte la conversación | Comparte la conversación |
-| **Puede corregir código** | ✅ Sí | ✅ Sí | ✅ Sí |
-| **Requiere API key externa** | ❌ No | ❌ No | ❌ No |
-| **Disponible globalmente** | ✅ Con instalación en `~/.claude/agents/` | ❌ Solo por proyecto | ❌ Solo por proyecto |
+| Aspecto | `@deckard` (Subagente) | `@officer-k` (Subagente) | `/review` (Command) | `/inspect` (Command) | `CLAUDE.md` (Auto) |
+|---|---|---|---|---|---|
+| **Invocación** | `@deckard` o `/review` | `@officer-k` o `/inspect` | `/review` en chat | `/inspect` en chat | Automático pre-commit |
+| **Scope** | Solo diffs (staged/unstaged) | Código fuente completo | Solo diffs | Código fuente completo | Solo diffs |
+| **Contexto** | Aislado y enfocado | Aislado y enfocado | Comparte la conversación | Comparte la conversación | Comparte la conversación |
+| **Puede corregir código** | ✅ Sí | ✅ Sí | ✅ Sí | ✅ Sí | ✅ Sí |
+| **Requiere API key externa** | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Disponible globalmente** | ✅ Con `~/.claude/agents/` | ✅ Con `~/.claude/agents/` | ❌ Solo por proyecto | ❌ Solo por proyecto | ❌ Solo por proyecto |
 
 > **Nota:** Todos los mecanismos referencian las reglas en `<DECKARD_PATH>/rules/rules.md`. Si mueves el proyecto Deckard, actualiza las rutas.
 
@@ -270,8 +307,10 @@ cp <DECKARD_PATH>/.claude/commands/review.md /path/to/tu-proyecto/.claude/comman
 - `review_pr.py`: Script principal para revisión de PRs en GitHub Actions. Extrae diffs remotos, llama al LLM vía LiteLLM y publica comentarios.
 - `review_local.py`: Script para pre-commit hooks (Husky/Git nativo). Analiza `git diff --cached` localmente usando LiteLLM.
 - `CLAUDE.md`: Regla de auto-revisión para Claude Code. Fuerza a Claude a revisar su código contra las reglas antes de commitear.
-- `.claude/agents/deckard.md`: Subagente de Claude Code. Define a Deckard como agente autónomo invocable con `@deckard`.
-- `.claude/commands/review.md`: Slash command `/review` para Claude Code. Permite disparar una revisión on-demand.
+- `.claude/agents/deckard.md`: Subagente de Claude Code. Define a Deckard como agente autónomo invocable con `@deckard`. Analiza diffs.
+- `.claude/agents/officer-k.md`: Subagente de Claude Code. Define a Officer K como agente de inspección completa invocable con `@officer-k`. Analiza todo el código fuente.
+- `.claude/commands/review.md`: Slash command `/review` para Claude Code. Revisión on-demand de cambios staged.
+- `.claude/commands/inspect.md`: Slash command `/inspect` para Claude Code. Inspección completa del repositorio.
 - `rules/rules.md`: Catálogo completo de reglas de Clean Code (naming, funciones, SOLID, DRY, tests) aplicadas por todos los modos.
 - `.logs/`: *(Del proyecto objetivo)* Contexto de arquitectura y decisiones técnicas que la IA incluye en el análisis.
 
