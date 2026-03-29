@@ -1,0 +1,4 @@
+litellm
+PyGithub
+python-dotenv
+requests
