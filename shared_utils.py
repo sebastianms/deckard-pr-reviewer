@@ -62,6 +62,12 @@ def parse_diff_by_file(diff_text: str, skip_deletions: bool = False) -> dict[str
                 current_file = None
             continue
 
+        if line.startswith('deleted file mode'):
+            if current_file and current_file in files:
+                del files[current_file]
+            current_file = None
+            continue
+
         if current_file and not line.startswith(('index ', '---', '+++')):
             # Evita falsos positivos por código eliminado
             if skip_deletions and line.startswith('-'):

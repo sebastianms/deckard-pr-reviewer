@@ -270,7 +270,7 @@ def main() -> None:
             print(f"📄 Archivo: \033[93m{fp}\033[0m")
             for v in violations:
                 print(f"  ❌ \033[91mViolación:\033[0m {v['violation']}")
-                print(f"     Línea que me delata: {v['line'].strip()}")
+                print(f"     Línea que me delata: {v['line']}")
                 print(f"     Sugerencia: {v['suggestion']}")
                 print(f"     Criticidad: \033[91m[{v['criticism']}/10]\033[0m")
             print("-" * 50)
