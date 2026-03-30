@@ -1,62 +1,61 @@
 # 🕵️‍♂️ Deckard PR Reviewer
 
-Bienvenido a **Deckard PR Reviewer**, una herramienta automatizada (Agente de IA) que actúa como un Revisor de Pull Requests para tu repositorio en GitHub. Inspirado en el icónico protagonista de *Blade Runner*, este script aplica una versión técnica de la *prueba Voight-Kampff* a tu código para asegurarse de que no haya "réplicas" (código de baja calidad o que incumpla las reglas) infiltradas en el sistema.
+> *AI-powered code reviewer that runs a **Voight-Kampff test** on your pull requests — because replicants (bad code) have no place in production.*
 
-El objetivo principal es mantener la base de código limpia imponiendo las reglas del **Clean Code** y garantizando la **Regla del Boy Scout** (siempre deja el código más limpio de lo que lo encontraste).
-
----
-
-## ✨ Características
-
-- **Análisis de Código Automatizado:** Extrae el diff de un PR y analiza las líneas modificadas (`+`).
-- **Agnóstico al Modelo de IA:** Gracias a [LiteLLM](https://github.com/BerriAI/litellm), puedes utilizar el LLM que prefieras: OpenAI (GPT-4), Anthropic (Claude), Google (Gemini), Groq, modelos locales, etc.
-- **Detector de Deuda Técnica:** Calcula la deuda técnica introducida en el PR en base a las "Anomalías Detectadas" (violaciones críticas de codificación) frente al volumen de líneas añadidas.
-- **Validación Bidireccional:** Lee los comentarios previos del bot en el PR e identifica inteligentemente qué feedback ya ha sido corregido por el desarrollador en un nuevo commit („Anomalías Retiradas”).
-- **Reglas Centralizadas:** Todas las reglas de Clean Code, buenas prácticas y arquitectura se evalúan utilizando el archivo de reglas global (`rules/rules.md`), así como integrando el registro de toma de decisiones (`.logs/` del proyecto, si existe).
-- **Personalidad Noir:** Las respuestas directas en GitHub adoptan un tono detectivesco, cínico y conciso para evaluar a qué nivel el "código es humano".
+**Deckard PR Reviewer** is an automated AI agent that reviews GitHub Pull Requests and local staged changes, enforcing **Clean Code** rules and the **Boy Scout Rule** (always leave the code cleaner than you found it).
 
 ---
 
-## 🚀 Instalación y Requisitos
+## ✨ Features
 
-1. **Clonar el Repositorio:**
+- **Automated Code Analysis:** Extracts the PR diff and analyzes only the added lines (`+`).
+- **LLM-Agnostic:** Powered by [LiteLLM](https://github.com/BerriAI/litellm) — use any model you prefer: OpenAI (GPT-4), Anthropic (Claude), Google (Gemini), Groq, local models, etc.
+- **Technical Debt Detector:** Calculates the technical debt introduced in the PR based on detected anomalies vs. lines added.
+- **Bidirectional Validation:** Reads previous bot comments on the PR and intelligently identifies which feedback has already been addressed in a new commit ("Retired Anomalies").
+- **Centralized Rules:** All Clean Code rules, best practices and architecture checks are evaluated using the global rules file (`rules/rules.md`), optionally enriched with the project's decision log (`.logs/`).
+- **Noir Personality:** GitHub comments adopt a cynical, detective-like tone to assess whether "the code is human."
+
+---
+
+## 🚀 Installation & Requirements
+
+1. **Clone the repository:**
    ```bash
-   git clone <URL_DEL_REPO> deckard
+   git clone <REPO_URL> deckard
    cd deckard
    ```
 
-2. **Instalar Dependencias:**
-   Usamos un entorno de Python básico. Instala las dependencias necesarias:
+2. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
-   *Entre las dependencias clave se encuentran `litellm` para la interacción unificada con la API del LLM, y `requests` para utilizar la API de GitHub.*
+   *Key dependencies: `litellm` for unified LLM API interaction, and `requests` for the GitHub API.*
 
 ---
 
-## ⚙️ Configuración (Variables de Entorno)
+## ⚙️ Configuration (Environment Variables)
 
-Antes de ejecutar los scripts, debes proveer ciertas variables de entorno imprescindibles (ya sea exportándolas en tu CI/CD o colocándolas en un archivo `.env` en tu entorno local).
+Provide the following environment variables before running (export them in your CI/CD or place them in a local `.env` file).
 
-| Variable | Descripción | Ejemplo |
+| Variable | Description | Example |
 |---|---|---|
-| `GITHUB_REPOSITORY` | El nombre del repositorio objetivo en formato `owner/repo`. | `facebook/react` |
-| `PR_NUMBER` | El formato numérico del Pull Request a analizar. | `42` |
-| `GITHUB_TOKEN` | Token de Acceso Personal (PAT) de GitHub con lectura de código y escritura de comentarios/revisiones en el repo. | `ghp_xxxxx...` |
-| `LLM_MODEL` | *(Opcional)* El proveedor y modelo que LiteLLM deberá inicializar. | `openai/gpt-4o` (Default: `gemini/gemini-1.5-pro-preview`) |
-| `<PROVIDER>_API_KEY` | La API Key nativa correspondiente al modelo seleccionado en `LLM_MODEL`. | `OPENAI_API_KEY="sk-..."` o `GEMINI_API_KEY="AIza..."` |
-| `SINGLE_REQUEST_MODE` | Agrupa todo el PR en 1 sola llamada para evitar Rate Limits de cuentas Free. | `true` o `false` |
-| `MAX_CONCURRENT_REVIEWS`| Concurrencia de hilos si `SINGLE_REQUEST_MODE=false`. Para cuentas de pago. | `5` |
+| `GITHUB_REPOSITORY` | Target repository in `owner/repo` format. | `facebook/react` |
+| `PR_NUMBER` | The Pull Request number to analyze. | `42` |
+| `GITHUB_TOKEN` | GitHub PAT with read access to code and write access for comments/reviews. | `ghp_xxxxx...` |
+| `LLM_MODEL` | *(Optional)* Provider and model for LiteLLM. | `openai/gpt-4o` (Default: `gemini/gemini-1.5-pro-preview`) |
+| `<PROVIDER>_API_KEY` | API key for the selected model. | `OPENAI_API_KEY="sk-..."` or `GEMINI_API_KEY="AIza..."` |
+| `SINGLE_REQUEST_MODE` | Bundle the entire PR into 1 call to avoid rate limits on free-tier accounts. | `true` or `false` |
+| `MAX_CONCURRENT_REVIEWS` | Thread concurrency when `SINGLE_REQUEST_MODE=false`. For paid accounts. | `5` |
 
-### Multi-LLM vía LiteLLM
+### Multi-LLM via LiteLLM
 
-Este script usa **LiteLLM**, lo que significa que el agente "Deckard" soporta casi cualquier modelo del mercado sin cambiar ni una línea de código. 
+Deckard supports virtually any model on the market without changing a single line of code — just set the right API key for the model you choose.
 
-Solo necesitas proveer la API Key correspondiente al nombre del modelo que pongas. Ejemplos de configuración para tu archivo `.env`:
+**.env examples:**
 
 **Google Gemini**
 ```env
-LLM_MODEL="gemini/gemini-1.5-pro-preview" # (o gemini-2.5-flash)
+LLM_MODEL="gemini/gemini-1.5-pro-preview"
 GEMINI_API_KEY="AIza..."
 ```
 
@@ -74,32 +73,32 @@ ANTHROPIC_API_KEY="sk-ant-..."
 
 ---
 
-## 🛠️ Uso
+## 🛠️ Usage
 
-### Ejecución Local
+### Local Execution
 
-Para correr el agente desde tu terminal (ideal para desarrollo y debugging), ahora cuentas con soporte nativo para archivos `.env`.
+Run the agent from your terminal (ideal for development and debugging). Native `.env` file support is included.
 
-1. Duplica el archivo de ejemplo para empezar:
+1. Copy the example env file:
    ```bash
    cp .env.example .env
    ```
-2. Rellena tus datos (`GEMINI_API_KEY`, cambiar a tu modelo preferido en `LLM_MODEL`, configurar tu `SINGLE_REQUEST_MODE`, etc.) dentro de `.env`. El script se encargará de levantar y priorizar todo automáticamente sin que dependas de `export` en bash.
-3. Ejecuta a nuestro Blade Runner:
+2. Fill in your values (`GEMINI_API_KEY`, `LLM_MODEL`, `SINGLE_REQUEST_MODE`, etc.).
+3. Run Deckard:
 
 ```bash
-# Para simular revisión sobre un Pull Request remoto en GitHub
-python review_pr.py 
+# Review a remote Pull Request on GitHub
+python review_pr.py
 
-# O para revisar tus archivos "staged" localmente antes de hacer commit
+# Or review your local staged files before committing
 python review_local.py
 ```
 
-### Integración Continua (GitHub Actions)
+### Continuous Integration (GitHub Actions)
 
-El escenario principal para este agente es ejecutarse automáticamente cuando se abre o se actualiza un Pull Request en un repositorio.
+The primary use case is running Deckard automatically when a PR is opened or updated.
 
-Crea un archivo de workflow en tu repositorio, por ejemplo: `.github/workflows/deckard_review.yml`:
+Create a workflow file in your repository, e.g. `.github/workflows/deckard_review.yml`:
 
 ```yaml
 name: Deckard PR Reviewer
@@ -112,21 +111,21 @@ jobs:
   voight_kampff_test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del código del revisor
+      - name: Checkout reviewer code
         uses: actions/checkout@v3
         with:
-          repository: 'tu-owner/deckard-reviewer-repo' # Dónde guardas a Deckard
+          repository: 'your-owner/deckard-reviewer-repo'
           ref: 'main'
 
-      - name: Configurar Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Ejecutar la revisión de código
+      - name: Run code review
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -136,43 +135,37 @@ jobs:
         run: python review_pr.py
 ```
 
-### 🔗 Uso como Pre-Commit Hook (Husky / Native)
+### 🔗 Pre-Commit Hook (Husky / Native)
 
-Deckard también está preparado para interrogar a los replicantes localmente antes de que envíes el código al repositorio remoto. Para esto, se provee el script `review_local.py` que abortará el commit si encuentra "anomalías" críticas en tus archivos preparados (*staged files*: `git diff --cached`).
+Deckard can interrogate replicants locally before you push code to the remote. The `review_local.py` script will abort the commit if it finds critical "anomalies" in your staged files (`git diff --cached`).
 
-**Configuración con Husky (Node.js):**
+**Husky (Node.js):**
 
-Si tu proyecto usa Node.js (o quisieras forzar el uso de `npm` en un repositorio vacío), instala y configura Husky:
 ```bash
-# Si tu proyecto aún no tiene un package.json, debes crearlo primero:
-# npm init -y
-
 npx husky-init
 npm install
 ```
-Luego edita tu archivo `.husky/pre-commit` para que llame a Deckard:
+
+Edit `.husky/pre-commit`:
 ```bash
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Si decides no utilizar el archivo .env, puedes exportar manualmente variables aquí:
 export LLM_MODEL="gemini/gemini-1.5-pro-preview"
-export GEMINI_API_KEY="TuApiKey..."
+export GEMINI_API_KEY="YourApiKey..."
 export SINGLE_REQUEST_MODE="true"
 export MAX_CONCURRENT_REVIEWS="1"
 
-# Adapta la siguiente ruta según dónde tengas guardado el script "deckard"
 python path/to/deckard/review_local.py
 ```
 
-**Configuración con pre-commit (Sin Node.js / Python / Go):**
+**pre-commit (Python / No Node.js):**
 
-Si tu proyecto no utiliza Node.js, el estándar de la industria equivalente a Husky es **`pre-commit`**.
-Instálalo con Python:
 ```bash
 pip install pre-commit
 ```
-Crea un archivo `.pre-commit-config.yaml` en la raíz de tu proyecto:
+
+Create `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: local
@@ -183,52 +176,40 @@ repos:
         language: system
         pass_filenames: false
 ```
-Por último, inicializa los hooks en tu repositorio:
+
 ```bash
 pre-commit install
 ```
 
-**Configuración Nativa (Git Hooks):**
+**Native Git Hook:**
 
-Si no usas herramientas externas, puedes crear un archivo ejecutable directamente en `.git/hooks/pre-commit` dentro de tu repositorio objetivo.
+Create `.git/hooks/pre-commit` in your target repository:
 ```bash
 #!/bin/sh
-
-# Solo necesitas apuntar Deckard al archivo correspondiente si usas .env
-# O exportar aquí si tu servidor Git no permite archivos .env
-# export LLM_MODEL="gemini/gemini-1.5-pro-preview"
-# export GEMINI_API_KEY="TuApiKey..."
-
 python path/to/deckard/review_local.py
 ```
-*Atención: ¡Asegúrate de darle permisos de ejecución (`chmod +x .git/hooks/pre-commit`) al archivo o fallará silenciosamente!*
+*Remember to make it executable: `chmod +x .git/hooks/pre-commit`*
 
-### 🤖 Integración con Claude Code
+---
 
-Deckard puede funcionar de forma nativa dentro de **Claude Code**, usando la propia sesión de Claude sin necesidad de API keys externas. Claude Code lee las reglas directamente y las aplica con su propia inteligencia.
+### 🤖 Claude Code Integration
 
-**Incluye tres mecanismos:**
+Deckard works natively inside **Claude Code**, using Claude's own session — no external API keys required.
 
-#### Subagente `@deckard` — Revisor de Diffs (Recomendado para pre-commit)
+**Three mechanisms are available:**
 
-El subagente es un agente especializado con su **propia personalidad, contexto aislado y reglas preconfiguradas**. Analiza únicamente los cambios staged/unstaged (`git diff`), ideal para revisiones antes de commit.
+#### `@deckard` Sub-agent — Diff Reviewer (Recommended for pre-commit)
 
-**Invocación desde Claude Code:**
+A specialized agent with its own isolated context and preconfigured rules. Analyzes only staged/unstaged changes (`git diff`).
+
 ```
-@deckard revisa mis cambios staged
+@deckard review my staged changes
 ```
-
-**Invocación desde la CLI:**
 ```bash
-claude --agent deckard "revisa los cambios staged"
+claude --agent deckard "review staged changes"
 ```
 
-**Instalación a nivel proyecto** (solo disponible en este repositorio):
-```bash
-# Ya incluido en .claude/agents/deckard.md
-```
-
-**Instalación global** (disponible en TODOS tus proyectos):
+**Global installation** (available in ALL your projects):
 ```bash
 mkdir -p ~/.claude/agents
 cp <DECKARD_PATH>/.claude/agents/deckard.md ~/.claude/agents/deckard.md
@@ -236,86 +217,74 @@ cp <DECKARD_PATH>/.claude/agents/deckard.md ~/.claude/agents/deckard.md
 
 ---
 
-#### Subagente `@officer-k` — Inspector de Código Completo
+#### `@officer-k` Sub-agent — Full Repository Inspector
 
-**Officer K** (KD6-3.7) es la contraparte de Deckard. En lugar de analizar diffs, **inspecciona el código fuente completo del repositorio** (`git ls-files`). Ideal para auditorías periódicas o cuando incorporas un proyecto heredado y quieres conocer su estado real.
+**Officer K** (KD6-3.7) is Deckard's counterpart. Instead of diffs, it **inspects the entire source code** (`git ls-files`). Ideal for periodic audits or onboarding legacy projects.
 
-**Invocación desde Claude Code:**
 ```
-@officer-k inspecciona el repositorio
+@officer-k inspect the repository
 ```
-
-**Invocación desde la CLI:**
 ```bash
-claude --agent officer-k "inspecciona todo el código del repositorio"
+claude --agent officer-k "inspect all repository code"
 ```
-
-**Slash command equivalente:**
 ```
 /inspect
 ```
 
-**Instalación a nivel proyecto** (solo disponible en este repositorio):
-```bash
-# Ya incluido en .claude/agents/officer-k.md
-```
-
-**Instalación global** (disponible en TODOS tus proyectos):
+**Global installation:**
 ```bash
 mkdir -p ~/.claude/agents
 cp <DECKARD_PATH>/.claude/agents/officer-k.md ~/.claude/agents/officer-k.md
 ```
 
-> **¿Cuándo usar cada uno?** Usa `@deckard` en tu flujo diario (pre-commit, PRs). Usa `@officer-k` cuando quieras una radiografía completa del repositorio: incorporación de proyectos legacy, auditorías de calidad, antes de una release importante.
+> **When to use each?** Use `@deckard` in your daily flow (pre-commit, PRs). Use `@officer-k` for a full repository X-ray: legacy onboarding, quality audits, pre-release checks.
 
 ---
 
-#### Auto-Review (siempre activo)
-El archivo `CLAUDE.md` instruye a Claude Code para que **siempre** revise su propio código contra las reglas de Deckard antes de hacer commit. No requiere intervención del usuario.
+#### Auto-Review (always active)
+`CLAUDE.md` instructs Claude Code to **always** review its own code against Deckard's rules before committing. No user intervention required.
 
-Para usarlo en otro proyecto, copia o haz un symlink del `CLAUDE.md` a la raíz de tu proyecto:
 ```bash
-cp <DECKARD_PATH>/CLAUDE.md /path/to/tu-proyecto/CLAUDE.md
+cp <DECKARD_PATH>/CLAUDE.md /path/to/your-project/CLAUDE.md
 ```
 
 #### Slash Command (`/review`) — On Demand
-Escribe `/review` en Claude Code para disparar una revisión manual de los cambios staged en cualquier momento.
+Type `/review` in Claude Code to trigger a manual review of staged changes at any time.
 
-Para usarlo en otro proyecto, copia la carpeta `.claude/commands/`:
 ```bash
-mkdir -p /path/to/tu-proyecto/.claude/commands
-cp <DECKARD_PATH>/.claude/commands/review.md /path/to/tu-proyecto/.claude/commands/review.md
+mkdir -p /path/to/your-project/.claude/commands
+cp <DECKARD_PATH>/.claude/commands/review.md /path/to/your-project/.claude/commands/review.md
 ```
 
-#### Comparativa de mecanismos
+#### Mechanism Comparison
 
-| Aspecto | `@deckard` (Subagente) | `@officer-k` (Subagente) | `/review` (Command) | `/inspect` (Command) | `CLAUDE.md` (Auto) |
+| Aspect | `@deckard` (Agent) | `@officer-k` (Agent) | `/review` (Command) | `/inspect` (Command) | `CLAUDE.md` (Auto) |
 |---|---|---|---|---|---|
-| **Invocación** | `@deckard` o `/review` | `@officer-k` o `/inspect` | `/review` en chat | `/inspect` en chat | Automático pre-commit |
-| **Scope** | Solo diffs (staged/unstaged) | Código fuente completo | Solo diffs | Código fuente completo | Solo diffs |
-| **Contexto** | Aislado y enfocado | Aislado y enfocado | Comparte la conversación | Comparte la conversación | Comparte la conversación |
-| **Puede corregir código** | ✅ Sí | ✅ Sí | ✅ Sí | ✅ Sí | ✅ Sí |
-| **Requiere API key externa** | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Disponible globalmente** | ✅ Con `~/.claude/agents/` | ✅ Con `~/.claude/agents/` | ❌ Solo por proyecto | ❌ Solo por proyecto | ❌ Solo por proyecto |
+| **Invocation** | `@deckard` or `/review` | `@officer-k` or `/inspect` | `/review` in chat | `/inspect` in chat | Automatic pre-commit |
+| **Scope** | Diffs only (staged/unstaged) | Full source code | Diffs only | Full source code | Diffs only |
+| **Context** | Isolated & focused | Isolated & focused | Shared conversation | Shared conversation | Shared conversation |
+| **Can fix code** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Requires external API key** | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Globally available** | ✅ With `~/.claude/agents/` | ✅ With `~/.claude/agents/` | ❌ Project only | ❌ Project only | ❌ Project only |
 
-> **Nota:** Todos los mecanismos referencian las reglas en `<DECKARD_PATH>/rules/rules.md`. Si mueves el proyecto Deckard, actualiza las rutas.
-
----
-
-## 📂 Archivos Importantes
-
-- `review_pr.py`: Script principal para revisión de PRs en GitHub Actions. Extrae diffs remotos, llama al LLM vía LiteLLM y publica comentarios.
-- `review_local.py`: Script para pre-commit hooks (Husky/Git nativo). Analiza `git diff --cached` localmente usando LiteLLM.
-- `CLAUDE.md`: Regla de auto-revisión para Claude Code. Fuerza a Claude a revisar su código contra las reglas antes de commitear.
-- `.claude/agents/deckard.md`: Subagente de Claude Code. Define a Deckard como agente autónomo invocable con `@deckard`. Analiza diffs.
-- `.claude/agents/officer-k.md`: Subagente de Claude Code. Define a Officer K como agente de inspección completa invocable con `@officer-k`. Analiza todo el código fuente.
-- `.claude/commands/review.md`: Slash command `/review` para Claude Code. Revisión on-demand de cambios staged.
-- `.claude/commands/inspect.md`: Slash command `/inspect` para Claude Code. Inspección completa del repositorio.
-- `rules/rules.md`: Catálogo completo de reglas de Clean Code (naming, funciones, SOLID, DRY, tests) aplicadas por todos los modos.
-- `.logs/`: *(Del proyecto objetivo)* Contexto de arquitectura y decisiones técnicas que la IA incluye en el análisis.
+> **Note:** All mechanisms reference the rules in `<DECKARD_PATH>/rules/rules.md`. If you move the Deckard project, update the paths.
 
 ---
 
-> *"He visto código que uds no creerían. Variables sin tipo asaltando el stack de memoria... Funciones de quinientas líneas brillando en la oscuridad de producción. Todos esos commits se perderán en el tiempo, como advertencias en consola. Es hora de refactorizar."*
-> 
+## 📂 Key Files
+
+- `review_pr.py`: Main script for GitHub Actions PR review. Fetches remote diffs, calls the LLM via LiteLLM, and posts comments.
+- `review_local.py`: Pre-commit hook script (Husky/native Git). Analyzes `git diff --cached` locally using LiteLLM.
+- `CLAUDE.md`: Auto-review rule for Claude Code. Forces Claude to review its own code against the rules before committing.
+- `.claude/agents/deckard.md`: Claude Code sub-agent. Defines Deckard as an autonomous agent invokable with `@deckard`. Analyzes diffs.
+- `.claude/agents/officer-k.md`: Claude Code sub-agent. Defines Officer K as a full inspection agent invokable with `@officer-k`.
+- `.claude/commands/review.md`: `/review` slash command for Claude Code. On-demand review of staged changes.
+- `.claude/commands/inspect.md`: `/inspect` slash command for Claude Code. Full repository inspection.
+- `rules/rules.md`: Complete Clean Code rules catalog (naming, functions, SOLID, DRY, tests) applied by all modes.
+- `.logs/`: *(From the target project)* Architecture context and technical decisions included in the AI analysis.
+
+---
+
+> *"I've seen code you people wouldn't believe. Untyped variables attacking memory stacks. Five-hundred-line functions glittering in the dark of production. All those commits will be lost in time, like warnings in a console. Time to refactor."*
+>
 > — **R. Deckard**
